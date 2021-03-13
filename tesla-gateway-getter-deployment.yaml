@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tesla-gateway-getter-deployment
+  namespace: monitoring
+  labels:
+    k8s-app: tesla-gateway-getter-deployment
+spec:
+  selector:
+    matchLabels:
+      name: tesla-gateway-getter-deployment
+  template:
+    metadata:
+      labels:
+        name: tesla-gateway-getter-deployment
+    spec:
+      containers:
+      - name: tesela-gateway-getter
+        image: docker.io/tesla-gateway-getter:latest
+        imagePullPolicy: Never
+        env:
+        - name: HOSTNAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: TESLA_INFLUXBUCKET
+          valueFrom:
+            secretKeyRef:
+              name: tesla-gw-getter-creds
+              key: TESLA_INFLUXBUCKET
+        - name: TESLA_INFLUXTOKEN
+          valueFrom:
+            secretKeyRef:
+              name: tesla-gw-getter-creds
+              key: TESLA_INFLUXTOKEN
+        - name: TESLA_INFLUXORG
+          valueFrom:
+            secretKeyRef:
+              name: tesla-gw-getter-creds
+              key: TESLA_INFLUXORG
+        - name: TESLA_INFLUXHOST
+          valueFrom:
+            secretKeyRef:
+              name: tesla-gw-getter-creds
+              key: TESLA_INFLUXHOST
+        - name: TESLA_EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: tesla-gw-getter-creds
+              key: TESLA_EMAIL
+        - name: TESLA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: tesla-gw-getter-creds
+              key: TESLA_PASSWORD
+        - name: TESLA_GATEWAY
+          valueFrom:
+            secretKeyRef:
+              name: tesla-gw-getter-creds
+              key: TESLA_GATEWAY
+      terminationGracePeriodSeconds: 30
