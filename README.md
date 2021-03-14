@@ -49,4 +49,4 @@ are welcome if _the easier way_ is implemented by someone else.
 
 In the end you'll get something like this.  The grafana dashboard is included.
 
-![grafana](https://github.com/fdawg4l/tesla-gateway/getter/raw/master/grafana/sample.png
+![grafana](https://github.com/fdawg4l/tesla-gateway-getter/raw/master/grafana/sample.png)
