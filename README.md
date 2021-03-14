@@ -1,4 +1,4 @@
-# tesla-gatewa-getter
+# tesla-gateway-getter
 
 The Tesla Powerwall Gateway exports an https + JSON endpoint which you can use
 to build dashboards with relevant energy information over time.  The gateway
