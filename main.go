@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/fdawg4l/tesla-gateway-getter/pkg/build"
 	"github.com/fdawg4l/tesla-gateway-getter/pkg/gateway"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/spf13/viper"
@@ -50,7 +51,10 @@ func main() {
 		interval = 30
 	}
 
+	log.Printf("%s -- build %s", os.Args[0], build.GitCommitID)
 	log.Printf("Using influx host=%s bucket=%s every=%d", config.InfluxHost, config.InfluxBucket, interval)
+	log.Printf("Using gateway host=%s", config.Gateway)
+
 	// Create a new client using an InfluxDB server base URL and an authentication token
 	influxClient := influxdb2.NewClient(config.InfluxHost, config.InfluxToken)
 	defer influxClient.Close()
@@ -91,8 +95,15 @@ func main() {
 
 			// Create point using full params constructor
 			// write point immediately
-			writeAPI.WritePoint(context.Background(), influxdb2.NewPoint("http", nil, agg.Values, time.Now()))
-			writeAPI.WritePoint(context.Background(), influxdb2.NewPoint("http", nil, map[string]interface{}{"percentage": soe.Percentage}, time.Now()))
+			p := influxdb2.NewPoint("http", nil, agg.Values, time.Now())
+			if err := writeAPI.WritePoint(context.Background(), p); err != nil {
+				log.Fatalf("error getting writing aggregates to influx %s", err.Error())
+			}
+
+			p = influxdb2.NewPoint("http", nil, map[string]interface{}{"percentage": soe.Percentage}, time.Now())
+			if err := writeAPI.WritePoint(context.Background(), p); err != nil {
+				log.Fatalf("error getting writing soe to influx %s", err.Error())
+			}
 		}
 	}
 }

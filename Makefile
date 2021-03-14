@@ -36,7 +36,7 @@ $(GOIMPORTS):
 
 govet: goversion $(GOIMPORTS)
 	@echo Checking go vet...
-	@$(GO) tool vet -all -shadow -lostcancel -tests $$(find . -mindepth 1 -maxdepth 1 -type d -not -name vendor -not -name api)
+	@$(GO) vet -all -lostcancel -tests $$(find . -type d -not -name vendor -not -name bin -not -name .git)
 	@echo Checking go imports...
 	@$(GOIMPORTS) -local semifreddo -d $$(find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./api/*") 2>&1
 
