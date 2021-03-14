@@ -13,6 +13,8 @@ This project grabs data from the gateway and pushes it to influxdb.
 Configuration is passed via environment variables, and a sample k8s deployment
 yaml is provided.
 
+
+
 ```
 # To build
 $ make
@@ -38,9 +40,13 @@ $ microk8s kubectl create secret generic tesla-gw-getter-creds \
 $ microk8s.kubectl -n <your namespace> apply -f ./tesla-gateway-getter-deployment.yaml
 ```
 
+
 There are probably easier ways of doing all of this like using `helm` or some
 tweaking of `telegraf` yaml.  I find `yaml` infuriating.  I need a T-square to
 know what is under what and even then it's a coin toss if the result will do
 the right thing.  This felt way easier than arguing with `yaml`.  Anyway, PRs
 are welcome if _the easier way_ is implemented by someone else.
 
+In the end you'll get something like this.  The grafana dashboard is included.
+
+![grafana](https://github.com/fdawg4l/tesla-gateway/getter/raw/master/grafana/sample.png
