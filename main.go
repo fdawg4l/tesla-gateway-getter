@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
@@ -23,6 +25,9 @@ type Config struct {
 	InfluxOrg    string `mapstructure: "TESLA_INFLUXORG"`
 	InfluxToken  string `mapstructure: "TESLA_INFLUXTOKEN"`
 	Interval     uint   `mapstructure: "TESLA_INTERVAL"`
+	// ServerPort is for the local REST endpoint to reflect values
+	// retrived from the TEG.
+	ServerPort uint `mapstructure: "TESLA_SERVERPORT"`
 }
 
 func main() {
@@ -40,6 +45,7 @@ func main() {
 	viper.BindEnv("influxorg")
 	viper.BindEnv("influxtoken")
 	viper.BindEnv("interval")
+	viper.BindEnv("port")
 	viper.AutomaticEnv()
 
 	if err := viper.Unmarshal(config); err != nil {
@@ -51,9 +57,19 @@ func main() {
 		interval = 30
 	}
 
+	if config.ServerPort == 0 {
+		config.ServerPort = 80
+	}
+
 	log.Printf("%s -- build %s", os.Args[0], build.GitCommitID)
-	log.Printf("Using influx host=%s bucket=%s every=%d", config.InfluxHost, config.InfluxBucket, interval)
-	log.Printf("Using gateway host=%s", config.Gateway)
+	log.Printf("Using influx host=%s bucket=%s every=%dseconds reflector port=%d", config.InfluxHost, config.InfluxBucket, interval, config.ServerPort)
+
+	reflector := gateway.NewReflector()
+	http.Handle("/", reflector)
+
+	go func() {
+		log.Fatal(http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", config.ServerPort), nil))
+	}()
 
 	// Create a new client using an InfluxDB server base URL and an authentication token
 	influxClient := influxdb2.NewClient(config.InfluxHost, config.InfluxToken)
@@ -104,6 +120,8 @@ func main() {
 			if err := writeAPI.WritePoint(context.Background(), p); err != nil {
 				log.Fatalf("error getting writing soe to influx %s", err.Error())
 			}
+
+			reflector.Reflect(agg, soe)
 		}
 	}
 }

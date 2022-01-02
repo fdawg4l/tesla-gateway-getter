@@ -2,10 +2,12 @@ package gateway
 
 import (
 	"encoding/json"
+	"net/http/httptest"
 	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -94,18 +96,38 @@ func TestUnmarshal(t *testing.T) {
 		return
 	}
 
-	if !assert.Equal(t, a.Values["battery_instant_reactive_power"].(float64), float64(20)) {
-		return
-	}
+	require.Equal(t, a.Values["battery_instant_reactive_power"].(float64), float64(20))
 
 	b := new(SOE)
-	if !assert.NoError(t, json.Unmarshal([]byte(percentage), b)) {
-		return
-	}
+	require.NoError(t, json.Unmarshal([]byte(percentage), b))
 
-	if !assert.Equal(t, b.Percentage, float64(60.3277636547622)) {
-		return
-	}
+	require.Equal(t, b.Percentage, float64(60.3277636547622))
+
+	reflector := NewReflector()
+	srv := httptest.NewServer(reflector)
+	defer srv.Close()
+
+	reflector.Reflect(a, b)
+
+	resp, err := srv.Client().Get(srv.URL)
+	require.NoError(t, err)
+
+	var out []json.RawMessage
+	dec := json.NewDecoder(resp.Body)
+	require.NoError(t, dec.Decode(&out))
+
+	c := new(Aggregates)
+	require.NoError(t, json.Unmarshal(out[0], c))
+	// dirty hack because we're not marshalling and unmarshalling
+	// correctly, and I don't want to change the database.
+	require.Equal(t, c.Values["Values_battery_instant_reactive_power"].(float64), float64(20))
+
+	d := new(SOE)
+	require.NoError(t, json.Unmarshal(out[1], d))
+	require.Equal(t, d, b)
+
+	//out, _ := ioutil.ReadAll(resp.Body)
+	//fmt.Printf("%s\n", string(out))
 }
 
 func TestLoginRequest(t *testing.T) {
