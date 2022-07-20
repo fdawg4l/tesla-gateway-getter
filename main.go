@@ -121,7 +121,7 @@ func main() {
 				log.Fatalf("error getting writing soe to influx %s", err.Error())
 			}
 
-			reflector.Reflect(agg, soe)
+			reflector.Reflect(agg.Values, soe.Percentage)
 		}
 	}
 }

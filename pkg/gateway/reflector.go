@@ -10,12 +10,13 @@ import (
 type Reflector struct {
 	mu *sync.RWMutex
 
-	objs []interface{}
+	objs map[string]interface{}
 }
 
 func NewReflector() *Reflector {
 	return &Reflector{
-		mu: new(sync.RWMutex),
+		mu:   new(sync.RWMutex),
+		objs: make(map[string]interface{}),
 	}
 }
 
@@ -32,9 +33,10 @@ func (r *Reflector) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 }
 
-func (r *Reflector) Reflect(objs ...interface{}) {
+func (r *Reflector) Reflect(inverter, battery interface{}) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	r.objs = objs
+	r.objs["inverter"] = inverter
+	r.objs["battery"] = battery
 }

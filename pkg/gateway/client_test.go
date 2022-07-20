@@ -107,23 +107,23 @@ func TestUnmarshal(t *testing.T) {
 	srv := httptest.NewServer(reflector)
 	defer srv.Close()
 
-	reflector.Reflect(a, b)
+	reflector.Reflect(a.Values, b.Percentage)
 
 	resp, err := srv.Client().Get(srv.URL)
 	require.NoError(t, err)
 
-	var out []json.RawMessage
+	var out map[string]json.RawMessage
 	dec := json.NewDecoder(resp.Body)
 	require.NoError(t, dec.Decode(&out))
 
 	c := new(Aggregates)
-	require.NoError(t, json.Unmarshal(out[0], c))
+	require.NoError(t, json.Unmarshal(out["inverter"], &c.Values))
 	// dirty hack because we're not marshalling and unmarshalling
 	// correctly, and I don't want to change the database.
-	require.Equal(t, c.Values["Values_battery_instant_reactive_power"].(float64), float64(20))
+	require.Equal(t, c.Values["battery_instant_reactive_power"].(float64), float64(20))
 
 	d := new(SOE)
-	require.NoError(t, json.Unmarshal(out[1], d))
+	require.NoError(t, json.Unmarshal(out["battery"], &d.Percentage))
 	require.Equal(t, d, b)
 
 	//out, _ := ioutil.ReadAll(resp.Body)
